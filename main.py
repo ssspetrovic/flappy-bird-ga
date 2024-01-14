@@ -324,8 +324,6 @@ def evaluate_genomes(genomes, config):
         for i, bird in enumerate(birds):
             bird.update()
 
-            ges[i].fitness += 0.1
-
             input_data = (
                 bird.y,
                 abs(bird.y - obstacles[obstacle_index].height),
@@ -336,6 +334,8 @@ def evaluate_genomes(genomes, config):
 
             if output > 0.4:
                 bird.flap()
+
+            ges[i].fitness += 0.1
 
         increase_score = False
 
