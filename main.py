@@ -5,8 +5,7 @@ import random
 import pygame
 import neat
 
-WIND_WIDTH = 800
-WIND_HEIGHT = 600
+WINDOW_DIM = (800, 600)
 
 IMAGE_PATH = "assets/img"
 
@@ -28,7 +27,8 @@ def load_image(filename: str) -> pygame.Surface:
 GROUND_IMAGE = load_image("ground.png")
 
 # Loading the backgorund image
-BG_IMAGE = load_image("background.png")
+# BG_IMAGE = load_image("background_city2.png")
+BG_IMAGE = pygame.image.load(os.path.join(IMAGE_PATH, "background_city2.png"))
 
 # We have 3 differeng bird images for each of the wing positions, so we load all 3 in a list
 BIRD_IMAGE = load_image("bird.png")
@@ -39,6 +39,9 @@ PIPE_IMAGE = load_image("pipe.png")
 print(BIRD_IMAGE)
 print(BG_IMAGE)
 print(GROUND_IMAGE)
+
+
+TERMINAL_VELOCITY = 8
 
 
 class Bird:
@@ -64,22 +67,80 @@ class Bird:
         self.x = x
         self.y = y
         self.height = self.y
-        self.velocity = 0
-        self.tick_count = 0
+        self.velocity = -10
 
     def flap(self) -> None:
         """
         Flaps the bird, causing it to jump upwards.
         """
-        self.velocity = -10 # The velocity is set to -10, which will cause the bird to move upwards because of the pygame coordinate system.
-        self.tick_count = 0 # The tick_count is set to 0, which will be used to track the time from the last jump.
-        self.height = self.y # The height is set to the current y-coordinate of the bird.
-        
-    def move(self) -> None:
-        pass
-    
-bird = Bird(200, 200)
+        self.velocity = -10  # The velocity is set to -10, which will cause the bird to move upwards because of the pygame coordinate system.
+        # The height is set to the current y-coordinate of the bird.
+        self.height = self.y
 
-while True:
-    bird.move()
+    def update(self) -> None:
+        self.velocity += 0.5  # Increment the t by 1.
+
+        # If the velocity is greater than the terminal velocity, set it to the terminal velocity.
+        if self.velocity >= TERMINAL_VELOCITY:
+            self.velocity = TERMINAL_VELOCITY
+
+        # Update the y-coordinate of the bird.
+        self.y += self.velocity
+
+    def draw(self, window) -> None:
+        """
+        Draws the bird on the specified window.
+
+        Args:
+            window (pygame.Surface): The window to draw the bird on.
+        """
+        window.blit(BIRD_IMAGE, (self.x, self.y))
+
+    def get_mask(self) -> pygame.mask.Mask:
+        """
+        Gets the mask of the bird.
+
+        Returns:
+            pygame.mask.Mask: The mask of the bird.
+        """
+        return pygame.mask.from_surface(BIRD_IMAGE)
+
+
+def draw_window(window, bird) -> None:
+    """
+    Draws the bird and updates the display.
+
+    Args:
+        window (pygame.Surface): The game window.
+        bird (Bird): The bird object to be drawn.
+
+    This function first draws the bird image at the top-left corner (0, 0) of the window.
+    Then it calls the draw method of the bird object, passing the window as an argument.
+    Finally, it updates the entire display.
+    """
+    window.blit(BG_IMAGE, (0, 0))
+    bird.draw(window)
+    pygame.display.update()
+
+
+def run():
+    window = pygame.display.set_mode(WINDOW_DIM)
+    pygame.display.set_caption("Flappy Bird")
+
+    bird = Bird(200, 200)
+
+    run = True
+    while run:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                run = False
+
+        bird.update()
+        draw_window(window, bird)
+
+    pygame.quit()
+    quit()
     
+    
+if __name__ == "__main__":
+    run()
