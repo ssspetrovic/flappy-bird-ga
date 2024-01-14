@@ -41,7 +41,7 @@ print(BG_IMAGE)
 print(GROUND_IMAGE)
 
 
-TERMINAL_VELOCITY = 8
+TERMINAL_VELOCITY = 20
 
 
 class Bird:
@@ -78,7 +78,7 @@ class Bird:
         self.height = self.y
 
     def update(self) -> None:
-        self.velocity += 0.5  # Increment the t by 1.
+        self.velocity += 1.0  # Increment the t by 1.
 
         # If the velocity is greater than the terminal velocity, set it to the terminal velocity.
         if self.velocity >= TERMINAL_VELOCITY:
@@ -126,11 +126,13 @@ def draw_window(window, bird) -> None:
 def run():
     window = pygame.display.set_mode(WINDOW_DIM)
     pygame.display.set_caption("Flappy Bird")
-
+    clock = pygame.time.Clock()
+    
     bird = Bird(200, 200)
 
     run = True
     while run:
+        clock.tick(30)
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 run = False
