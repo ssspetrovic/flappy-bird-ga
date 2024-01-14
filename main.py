@@ -4,39 +4,13 @@ import random
 import pygame
 import neat
 
+from constants import *
+
+generations_count = 1
+
 pygame.font.init()
-
-
-WINDOW_DIM = (800, 600)
-
-IMAGE_PATH = "assets/img"
-
-
-def load_image(filename: str) -> pygame.Surface:
-    """
-    Load and return an image from the specified filename.
-
-    Args:
-        filename (str): The name of the image file to load.
-
-    Returns:
-        pygame.Surface: The loaded image as a pygame Surface object.
-    """
-    return pygame.transform.scale2x(pygame.image.load(os.path.join(IMAGE_PATH, filename)))
-
-
-# Loading the background image
-BG_IMAGE = pygame.image.load(os.path.join(IMAGE_PATH, "background_city.png"))
-
-# We have 3 different bird images for each of the wing positions, so we load all 3 in a list
-BIRD_IMAGE = load_image("bird.png")
-
-# Here, we load the pipe image that will be used as the obstacle
-PIPE_BOTTOM_IMAGE = load_image("obstacle.png")
-# We flip the pipe image vertically to get the top pipe image
-PIPE_TOP_IMAGE = pygame.transform.flip(PIPE_BOTTOM_IMAGE, False, True)
-
-TERMINAL_VELOCITY = 8
+SURFACE = pygame.display.set_mode(WINDOW_DIM)
+pygame.display.set_caption("Flappy Bird")
 
 
 class Bird:
@@ -49,6 +23,7 @@ class Bird:
         height (int): The initial height of the bird, same as y.
         velocity (int): The current velocity of the bird, initially 0.
         tick_count (int): A counter used for tracking time from the last bird jump, initially 0.
+        clicked (bool): Indicates whether the bird has been clicked to flap.
     """
 
     def __init__(self, x, y) -> None:
@@ -77,7 +52,7 @@ class Bird:
         """
         Handles the gravity.
         """
-        self.velocity += 0.75
+        self.velocity += 0.8
 
         if self.velocity >= TERMINAL_VELOCITY:
             self.velocity = TERMINAL_VELOCITY
@@ -95,6 +70,9 @@ class Bird:
             self.clicked = False
 
     def update(self) -> None:
+        """
+        Updates the bird's position and handles user input.
+        """
         self.handle_gravity()
         self.handle_click()
 
@@ -146,7 +124,7 @@ class Obstacle:
         self.passed = False
 
         self.gap = 215
-        self.velocity = 5
+        self.velocity = 3
 
         self.update_y()
 
@@ -222,70 +200,167 @@ class Obstacle:
         return bottom_collision_point or top_collision_point
 
 
-def render_window(surface: pygame.Surface, bird: Bird, obstacles: list[Obstacle], score: int) -> None:
+def draw_info(surface: pygame.Surface, birds: list[Bird], obstacles: list[Obstacle], score: int, generations_count: int) -> None:
     """
-    Renderds the bird, obstacles, and updates the display.
+    Draws score and generation information on the game surface.
 
     Args:
         surface (pygame.Surface): The game surface.
-        bird (Bird): The bird object to be rendered.
-        obstacles (list[Obstacle]): The list of obstacles (pipes).
+        birds (list[Bird]): List of bird objects.
+        obstacles (list[Obstacle]): List of obstacle objects.
         score (int): The current score.
-
-    This function first renders the background image at the top-left corner (0, 0) of the surface.
-    Then it calls the render method of each obstacle in the obstacles list, passing the surface as an argument.
-    After that, it renders the bird on the surface. Finally, it updates the entire display.
+        generations_count (int): The current generation count.
     """
-    surface.blit(BG_IMAGE, (0, 0))
+    font = pygame.font.Font(None, 36)
+    text = font.render(f"Score: {score}", True, (255, 0, 0))
+    surface.blit(text, (10, 10))
+    text = font.render(f"Generation No: {
+                       generations_count}", True, (255, 0, 0))
+    surface.blit(text, (10, 40))
+    text = font.render(f"Population size: {len(birds)}", True, (255, 0, 0))
+    surface.blit(text, (10, 70))
+
+
+def render_surface(birds: list[Bird], obstacles: list[Obstacle], score: int) -> None:
+    """
+    Renders the bird, obstacles, and updates the display.
+
+    Args:
+        surface (pygame.Surface): The game surface.
+        birds (list[Bird]): List of bird objects.
+        obstacles (list[Obstacle]): List of obstacle objects.
+        score (int): The current score.
+    """
+    global generations_count
+    SURFACE.blit(BG_IMAGE, (0, 0))
 
     for obstacle in obstacles:
-        obstacle.render(surface)
+        obstacle.render(SURFACE)
 
-    bird.render(surface)
+    for bird in birds:
+        bird.render(SURFACE)
 
-    font = pygame.font.Font(None, 36)
-    text = font.render(f"Score: {score}", True, (255, 255, 255))
-    surface.blit(text, (10, 10))
+    draw_info(SURFACE, birds, obstacles, score, generations_count)
 
     pygame.display.update()
 
 
-def restart_game():
-    return Bird(200, 200), [Obstacle(800)], 0
+def get_obstacle_index(birds, obstacles):
+    """
+    Gets the index of the active obstacle based on the bird's position.
+
+    Args:
+        birds: List of bird objects.
+        obstacles: List of obstacle objects.
+
+    Returns:
+        int: The index of the active obstacle.
+    """
+    if len(birds) > 0:
+        return 1 if len(obstacles) > 1 and birds[0].x > obstacles[0].x + PIPE_TOP_IMAGE.get_width() else 0
 
 
-def run_game():
-    surface = pygame.display.set_mode(WINDOW_DIM)
-    pygame.display.set_caption("Flappy Bird")
+def remove_data(birds: list[Bird], ges: list[neat.DefaultGenome], networks: list[neat.nn.FeedForwardNetwork], i: int, bird: Bird):
+    """
+    Removes data related to a bird from lists.
+
+    Args:
+        birds (list[Bird]): List of bird objects.
+        ges (list[neat.DefaultGenome]): List of genomes.
+        networks (list[neat.nn.FeedForwardNetwork]): List of neural networks.
+        i (int): Index of the bird to be removed.
+        bird (Bird): The bird object to be removed.
+    """
+    birds.remove(bird)
+    ges[i].fitness -= 1
+    networks.pop(i)
+    ges.pop(i)
+
+
+def evaluate_genomes(genomes, config):
+    """
+    Evaluates the fitness of each genome in a generation.
+
+    Args:
+        genomes: List of genomes.
+        config: NEAT configuration.
+
+    Returns:
+        None
+    """
+
+    global generations_count
+    generations_count += 1
+
+    ges = []
+    networks = []
+
+    obstacles = [Obstacle(WINDOW_DIM[0])]
+    birds = []
+    score = 0
+
     clock = pygame.time.Clock()
 
-    bird, obstacles, score = restart_game()
+    for _, genome in genomes:
+        genome.fitness = 0
+        ges.append(genome)
+        network = neat.nn.FeedForwardNetwork.create(genome, config)
+        networks.append(network)
+        birds.append(Bird(BIRD_DEFAULT_X, BIRD_DEFAULT_Y))
 
     run = True
-    while run:
-        clock.tick(60)
+    while run and len(birds) > 0:
+        render_surface(birds, obstacles, score)
+        clock.tick(FPS)
+
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
+                run = False
                 pygame.quit()
                 quit()
 
-        bird.update()
+        obstacle_index = get_obstacle_index(birds, obstacles)
 
-        if bird.y > WINDOW_DIM[1] or bird.y < -150:
-            # Bird went out of the top or bottom of the window - end the game
-            bird, obstacles, score = restart_game()
+        for i, bird in enumerate(birds):
+            bird.update()
+
+            ges[i].fitness += 0.1
+
+            input_data = (
+                bird.y,
+                abs(bird.y - obstacles[obstacle_index].height),
+                abs(bird.y - obstacles[obstacle_index].y_bottom)
+            )
+
+            output = networks[i].activate(input_data)[0]
+
+            if output > 0.4:
+                bird.flap()
+
+        increase_score = False
 
         for obstacle in obstacles:
+            for i, bird in enumerate(birds):
+                if bird.y > WINDOW_DIM[1] or bird.y < 0:
+                    remove_data(birds, ges, networks, i, bird)
+
+                if obstacle.x < bird.x and not obstacle.passed:
+                    obstacle.passed = True
+                    increase_score = True
+
+                if obstacle.check_collision(bird):
+                    remove_data(birds, ges, networks, i, bird)
+                    break
+
             obstacle.update()
-            if obstacle.x < bird.x and not obstacle.passed:
-                obstacle.passed = True
+
+            if increase_score:
+                increase_score = False
                 score += 1
+                for genome in ges:
+                    genome.fitness += 5
 
-            if obstacle.check_collision(bird):
-                bird, obstacles, score = restart_game()
-                break
-
-        # Check if it's time to spawn a new pipe
+        # Check if it's time to spawn a new obstacle
         if obstacles[-1].x < WINDOW_DIM[0] - 300:
             obstacles.append(Obstacle(WINDOW_DIM[0]))
 
@@ -293,23 +368,27 @@ def run_game():
         obstacles = [
             obstacle for obstacle in obstacles if obstacle.x > -obstacle.width]
 
-        render_window(surface, bird, obstacles, score)
 
-    # Game over - restart the game
-    bird, obstacles, score = restart_game()
-    run_game(surface, clock, bird, obstacles, score)
+def run_neat(config_file):
+    """
+    Runs NEAT algorithm with the provided configuration file.
 
+    Args:
+        config_file (str): Path to the NEAT configuration file.
 
-def run_neat():
+    Returns:
+        None
+    """
     neat_cfg = neat.Config(
         neat.DefaultGenome, neat.DefaultReproduction,
         neat.DefaultSpeciesSet, neat.DefaultStagnation,
-        "config/neat_cfg.txt"
+        config_file
     )
 
     population = neat.Population(neat_cfg)
-    
-    # best_genome = population.run(run_game_neat, 50)
+    population.run(evaluate_genomes, GENERATIONS)
+
 
 if __name__ == "__main__":
-    run_game()
+    config_file = os.path.join('config', 'neat_cfg.txt')
+    run_neat(config_file)
