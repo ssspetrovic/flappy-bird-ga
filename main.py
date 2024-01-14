@@ -67,18 +67,23 @@ class Bird:
         self.x = x
         self.y = y
         self.height = self.y
-        self.velocity = -10
+        self.velocity = -15
+        self.clicked = False
 
     def flap(self) -> None:
         """
         Flaps the bird, causing it to jump upwards.
         """
-        self.velocity = -10  # The velocity is set to -10, which will cause the bird to move upwards because of the pygame coordinate system.
+        self.velocity = -25  # The velocity is set to -10, which will cause the bird to move upwards because of the pygame coordinate system.
         # The height is set to the current y-coordinate of the bird.
         self.height = self.y
+        self.clicked = True
 
-    def update(self) -> None:
-        self.velocity += 1.0  # Increment the t by 1.
+    def handle_gravity(self) -> None:
+        """
+        Handles the gravity.
+        """
+        self.velocity += 2.0  # Increment the t by 1.
 
         # If the velocity is greater than the terminal velocity, set it to the terminal velocity.
         if self.velocity >= TERMINAL_VELOCITY:
@@ -86,6 +91,20 @@ class Bird:
 
         # Update the y-coordinate of the bird.
         self.y += self.velocity
+
+    def handle_click(self) -> None:
+        """
+        Handles the click event.
+        """
+        if pygame.mouse.get_pressed()[0] and self.clicked == False:
+            self.flap()
+
+        if not pygame.mouse.get_pressed()[0]:
+            self.clicked = False
+
+    def update(self) -> None:
+        self.handle_gravity()
+        self.handle_click()
 
     def draw(self, window) -> None:
         """
@@ -127,7 +146,7 @@ def run():
     window = pygame.display.set_mode(WINDOW_DIM)
     pygame.display.set_caption("Flappy Bird")
     clock = pygame.time.Clock()
-    
+
     bird = Bird(200, 200)
 
     run = True
@@ -142,7 +161,7 @@ def run():
 
     pygame.quit()
     quit()
-    
-    
+
+
 if __name__ == "__main__":
     run()
