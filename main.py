@@ -1,6 +1,8 @@
 import os
 import random
+
 import pygame
+import neat
 
 pygame.font.init()
 
@@ -23,21 +25,18 @@ def load_image(filename: str) -> pygame.Surface:
     return pygame.transform.scale2x(pygame.image.load(os.path.join(IMAGE_PATH, filename)))
 
 
-# Loading the ground image
-GROUND_IMAGE = load_image("ground.png")
-
 # Loading the background image
-BG_IMAGE = pygame.image.load(os.path.join(IMAGE_PATH, "background_city2.png"))
+BG_IMAGE = pygame.image.load(os.path.join(IMAGE_PATH, "background_city.png"))
 
 # We have 3 different bird images for each of the wing positions, so we load all 3 in a list
 BIRD_IMAGE = load_image("bird.png")
 
 # Here, we load the pipe image that will be used as the obstacle
-PIPE_BOTTOM_IMAGE = load_image("pipe.png")
+PIPE_BOTTOM_IMAGE = load_image("obstacle.png")
 # We flip the pipe image vertically to get the top pipe image
 PIPE_TOP_IMAGE = pygame.transform.flip(PIPE_BOTTOM_IMAGE, False, True)
 
-TERMINAL_VELOCITY = 20
+TERMINAL_VELOCITY = 8
 
 
 class Bird:
@@ -63,14 +62,14 @@ class Bird:
         self.x = x
         self.y = y
         self.height = self.y
-        self.velocity = -15
+        self.velocity = -5
         self.clicked = False
 
     def flap(self) -> None:
         """
         Flaps the bird, causing it to jump upwards.
         """
-        self.velocity = -25
+        self.velocity = -15
         self.height = self.y
         self.clicked = True
 
@@ -78,7 +77,7 @@ class Bird:
         """
         Handles the gravity.
         """
-        self.velocity += 2.0
+        self.velocity += 0.75
 
         if self.velocity >= TERMINAL_VELOCITY:
             self.velocity = TERMINAL_VELOCITY
@@ -147,7 +146,7 @@ class Obstacle:
         self.passed = False
 
         self.gap = 215
-        self.velocity = 10
+        self.velocity = 5
 
         self.update_y()
 
@@ -223,17 +222,17 @@ class Obstacle:
         return bottom_collision_point or top_collision_point
 
 
-def draw_window(surface: pygame.Surface, bird: Bird, obstacles: list[Obstacle], score: int) -> None:
+def render_window(surface: pygame.Surface, bird: Bird, obstacles: list[Obstacle], score: int) -> None:
     """
-    Draws the bird, obstacles, and updates the display.
+    Renderds the bird, obstacles, and updates the display.
 
     Args:
         surface (pygame.Surface): The game surface.
-        bird (Bird): The bird object to be drawn.
+        bird (Bird): The bird object to be rendered.
         obstacles (list[Obstacle]): The list of obstacles (pipes).
         score (int): The current score.
 
-    This function first draws the background image at the top-left corner (0, 0) of the surface.
+    This function first renders the background image at the top-left corner (0, 0) of the surface.
     Then it calls the render method of each obstacle in the obstacles list, passing the surface as an argument.
     After that, it renders the bird on the surface. Finally, it updates the entire display.
     """
@@ -255,26 +254,16 @@ def restart_game():
     return Bird(200, 200), [Obstacle(800)], 0
 
 
-def run():
+def run_game():
     surface = pygame.display.set_mode(WINDOW_DIM)
     pygame.display.set_caption("Flappy Bird")
     clock = pygame.time.Clock()
 
     bird, obstacles, score = restart_game()
 
-    while True:
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                pygame.quit()
-                quit()
-
-        run_game(surface, clock, bird, obstacles, score)
-
-
-def run_game(surface, clock, bird, obstacles, score):
     run = True
     while run:
-        clock.tick(30)
+        clock.tick(60)
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
@@ -304,12 +293,23 @@ def run_game(surface, clock, bird, obstacles, score):
         obstacles = [
             obstacle for obstacle in obstacles if obstacle.x > -obstacle.width]
 
-        draw_window(surface, bird, obstacles, score)
+        render_window(surface, bird, obstacles, score)
 
     # Game over - restart the game
     bird, obstacles, score = restart_game()
     run_game(surface, clock, bird, obstacles, score)
 
 
+def run_neat():
+    neat_cfg = neat.Config(
+        neat.DefaultGenome, neat.DefaultReproduction,
+        neat.DefaultSpeciesSet, neat.DefaultStagnation,
+        "config/neat_cfg.txt"
+    )
+
+    population = neat.Population(neat_cfg)
+    
+    # best_genome = population.run(run_game_neat, 50)
+
 if __name__ == "__main__":
-    run()
+    run_game()
