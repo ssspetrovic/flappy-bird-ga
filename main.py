@@ -141,7 +141,7 @@ class Obstacle:
         """
         self.x -= self.velocity
 
-    def render(self, surface) -> None:
+    def render(self, surface: pygame.Surface) -> None:
         """
         Renders the top and bottom pipe images on the given surface.
 
@@ -244,7 +244,7 @@ def render_surface(birds: list[Bird], obstacles: list[Obstacle], score: int) -> 
     pygame.display.update()
 
 
-def get_obstacle_index(birds, obstacles) -> int:
+def get_obstacle_index(birds: list[Bird], obstacles: list[Obstacle]) -> int:
     """
     Gets the index of the active obstacle based on the bird's position.
 
@@ -279,7 +279,7 @@ def remove_data(birds: list[Bird], ges: list[neat.DefaultGenome], networks: list
     ges.pop(i)
 
 
-def evaluate_genomes(genomes, config) -> None:
+def evaluate_genomes(genomes: list[neat.DefaultGenome], config: neat.Config) -> None:
     """
     Evaluates the fitness of each genome in a generation.
 
@@ -370,7 +370,7 @@ def evaluate_genomes(genomes, config) -> None:
     generations_count += 1
 
 
-def run_neat(config_file) -> None:
+def run_neat(config_file: str) -> None:
     """
     Runs NEAT algorithm with the provided configuration file.
 
