@@ -6,7 +6,7 @@ import neat
 
 from constants import *
 
-generations_count = 1
+generations_count = 0
 
 pygame.font.init()
 SURFACE = pygame.display.set_mode(WINDOW_DIM)
