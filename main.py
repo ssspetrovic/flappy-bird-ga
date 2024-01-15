@@ -288,10 +288,6 @@ def evaluate_genomes(genomes, config):
     Returns:
         None
     """
-
-    global generations_count
-    generations_count += 1
-
     ges = []
     networks = []
 
@@ -367,6 +363,9 @@ def evaluate_genomes(genomes, config):
         # Remove obstacles that are off the screen
         obstacles = [
             obstacle for obstacle in obstacles if obstacle.x > -obstacle.width]
+
+    global generations_count
+    generations_count += 1
 
 
 def run_neat(config_file):
