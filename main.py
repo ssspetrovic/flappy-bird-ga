@@ -212,13 +212,13 @@ def draw_info(surface: pygame.Surface, birds: list[Bird], obstacles: list[Obstac
         generations_count (int): The current generation count.
     """
     font = pygame.font.Font(None, 36)
-    text = font.render(f"Score: {score}", True, (255, 0, 0))
-    surface.blit(text, (10, 10))
-    text = font.render(f"Generation No: {
-                       generations_count}", True, (255, 0, 0))
-    surface.blit(text, (10, 40))
-    text = font.render(f"Population size: {len(birds)}", True, (255, 0, 0))
-    surface.blit(text, (10, 70))
+    text = font.render(f"Score: {score}", True, (0, 0, 0))
+    surface.blit(text, (10, 500))
+    text = font.render(f"Current generation: {
+                       generations_count}", True, (0, 0, 0))
+    surface.blit(text, (10, 530))
+    text = font.render(f"Population size: {len(birds)}", True, (0, 0, 0))
+    surface.blit(text, (10, 560))
 
 
 def render_surface(birds: list[Bird], obstacles: list[Obstacle], score: int) -> None:
@@ -385,7 +385,13 @@ def run_neat(config_file):
         config_file
     )
 
+    # Creating the population
     population = neat.Population(neat_cfg)
+
+    # Performance tracker for the generations
+    population.add_reporter(neat.StdOutReporter(True))
+
+    # Performing the training
     population.run(evaluate_genomes, GENERATIONS)
 
 
