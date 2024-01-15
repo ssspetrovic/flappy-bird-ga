@@ -199,14 +199,13 @@ class Obstacle:
         return bottom_collision_point or top_collision_point
 
 
-def draw_info(surface: pygame.Surface, birds: list[Bird], obstacles: list[Obstacle], score: int, generations_count: int) -> None:
+def draw_info(surface: pygame.Surface, birds: list[Bird], score: int, generations_count: int) -> None:
     """
     Draws score and generation information on the game surface.
 
     Args:
         surface (pygame.Surface): The game surface.
         birds (list[Bird]): List of bird objects.
-        obstacles (list[Obstacle]): List of obstacle objects.
         score (int): The current score.
         generations_count (int): The current generation count.
     """
