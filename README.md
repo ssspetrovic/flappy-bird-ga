@@ -70,7 +70,3 @@ The NEAT configuration file used for training the birds is located at `config/ne
 ## Acknowledgements
 
 This project is inspired by the Flappy Bird game and the NEAT algorithm. The Flappy Bird assets are utilized for educational purposes and are not owned by the creator of this project.
-
-## License
-
-This project is licensed under the [MIT License](LICENSE). Feel free to use and modify the code for your own projects.
