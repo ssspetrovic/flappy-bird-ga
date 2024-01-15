@@ -127,7 +127,7 @@ class Obstacle:
 
         self.update_y()
 
-    def update_y(self):
+    def update_y(self) -> None:
         """
         Updates the y-coordinates of the top and bottom pipes.
         """
@@ -244,7 +244,7 @@ def render_surface(birds: list[Bird], obstacles: list[Obstacle], score: int) -> 
     pygame.display.update()
 
 
-def get_obstacle_index(birds, obstacles):
+def get_obstacle_index(birds, obstacles) -> int:
     """
     Gets the index of the active obstacle based on the bird's position.
 
@@ -259,7 +259,7 @@ def get_obstacle_index(birds, obstacles):
         return 1 if len(obstacles) > 1 and birds[0].x > obstacles[0].x + PIPE_TOP_IMAGE.get_width() else 0
 
 
-def remove_data(birds: list[Bird], ges: list[neat.DefaultGenome], networks: list[neat.nn.FeedForwardNetwork], i: int, bird: Bird):
+def remove_data(birds: list[Bird], ges: list[neat.DefaultGenome], networks: list[neat.nn.FeedForwardNetwork], i: int, bird: Bird) -> None:
     """
     Removes data related to a bird from lists.
 
@@ -269,6 +269,9 @@ def remove_data(birds: list[Bird], ges: list[neat.DefaultGenome], networks: list
         networks (list[neat.nn.FeedForwardNetwork]): List of neural networks.
         i (int): Index of the bird to be removed.
         bird (Bird): The bird object to be removed.
+
+    Returns:
+        None
     """
     birds.remove(bird)
     ges[i].fitness -= 1
@@ -276,7 +279,7 @@ def remove_data(birds: list[Bird], ges: list[neat.DefaultGenome], networks: list
     ges.pop(i)
 
 
-def evaluate_genomes(genomes, config):
+def evaluate_genomes(genomes, config) -> None:
     """
     Evaluates the fitness of each genome in a generation.
 
@@ -367,7 +370,7 @@ def evaluate_genomes(genomes, config):
     generations_count += 1
 
 
-def run_neat(config_file):
+def run_neat(config_file) -> None:
     """
     Runs NEAT algorithm with the provided configuration file.
 
