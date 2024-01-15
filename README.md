@@ -49,7 +49,7 @@ This project is an implementation of the classic Flappy Bird game using the NEAT
 Run the NEAT algorithm with the provided configuration file:
 
 ```bash
-python flappy_bird_neat.py
+python main.py
 ```
 
 This command starts the Flappy Bird game, where a population of birds is trained using the NEAT algorithm to navigate through obstacles.
