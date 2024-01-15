@@ -22,7 +22,6 @@ class Bird:
         y (int): The y-coordinate of the bird.
         height (int): The initial height of the bird, same as y.
         velocity (int): The current velocity of the bird, initially 0.
-        tick_count (int): A counter used for tracking time from the last bird jump, initially 0.
         clicked (bool): Indicates whether the bird has been clicked to flap.
     """
 
