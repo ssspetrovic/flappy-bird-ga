@@ -238,7 +238,7 @@ def render_surface(birds: list[Bird], obstacles: list[Obstacle], score: int) -> 
     for bird in birds:
         bird.render(SURFACE)
 
-    draw_info(SURFACE, birds, obstacles, score, generations_count)
+    draw_info(SURFACE, birds, score, generations_count)
 
     pygame.display.update()
 
@@ -297,7 +297,9 @@ def evaluate_genomes(genomes: list[neat.DefaultGenome], config: neat.Config) -> 
     score = 0
 
     clock = pygame.time.Clock()
-
+    global generations_count
+    generations_count += 1
+    
     for _, genome in genomes:
         genome.fitness = 0
         ges.append(genome)
@@ -365,8 +367,7 @@ def evaluate_genomes(genomes: list[neat.DefaultGenome], config: neat.Config) -> 
         obstacles = [
             obstacle for obstacle in obstacles if obstacle.x > -obstacle.width]
 
-    global generations_count
-    generations_count += 1
+
 
 
 def run_neat(config_file: str) -> None:
